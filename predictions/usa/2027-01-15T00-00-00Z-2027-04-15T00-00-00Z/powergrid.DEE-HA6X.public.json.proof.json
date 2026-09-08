@@ -1,0 +1,8 @@
+{
+  "id": "predictions.usa.2027-01-15T00-00-00Z-2027-04-15T00-00-00Z.powergrid.DEE-HA6X.public",
+  "file": "powergrid.DEE-HA6X.public.json",
+  "sha256": "05f8aa4256dd73daf21342ff54dcae9a480cddf087d8c0d27a599180821907f6",
+  "ots_file": "powergrid.DEE-HA6X.public.json.ots",
+  "timestamp_method": "opentimestamps",
+  "created_utc": "2026-09-08T00:43:08Z"
+}

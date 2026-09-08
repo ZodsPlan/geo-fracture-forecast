@@ -1,0 +1,48 @@
+{
+  "prediction_id": "DEE-HA6X-PUB-2026-09-08",
+  "timestamp": "2026-09-08T00:00:00Z",
+  "node": "DEE-HA6X",
+  "country": "United States of America",
+  "region": "Eastern Interconnection — PJM + SERC Central",
+  "primary_impact_zones": {
+    "high_risk": {
+      "name": "Data Center Alley (Dominion Virginia territory)",
+      "locations": ["Ashburn", "Dulles", "Sterling"],
+      "states": ["Virginia"]
+    },
+    "cascaded_states": ["Maryland", "Pennsylvania", "Ohio", "New Jersey", "Illinois", "Kentucky", "Tennessee", "North Carolina"],
+    "frequency_disturbance_zones": ["Chicago", "Washington D.C.", "New York", "Boston", "Miami"]
+  },
+  "prediction": {
+    "T_fracture": { "start": "2026-11-01T00:00:00Z", "end": "2027-02-01T00:00:00Z" },
+    "T_observable": { "start": "2027-01-15T00:00:00Z", "end": "2027-04-15T00:00:00Z" },
+    "D_m": { "mean_days": 60, "lower": 30, "upper": 90, "unit": "days" }
+  },
+  "mechanism": [
+    "Severe extratropical cyclone or derecho (wind > 50 mph) hits Mid-Atlantic",
+    "Transmission lines sag/trip in PJM region causing voltage disturbances",
+    "Data centers in Northern Virginia disconnect as controllable loads (1.5–2 GW drop)",
+    "Frequency transient triggers Under-Frequency Load Shedding (UFLS) across multiple states",
+    "Cascading reverse shedding wave propagates through Eastern Interconnection",
+    "PJM declares Level 3 Emergency; rotating outages begin",
+    "SERC Central begins voltage-support blackouts"
+  ],
+  "narrative_signature_forecast": [
+    "Stage 1: 'Emergency maintenance' or 'fault' reported",
+    "Stage 2: Same event relabeled as 'planned maintenance' or 'system improvement'",
+    "Stage 3: Silence (no official explanation during/after event)",
+    "Stage 4: Collapse (observable blackout) with delayed or absent press release"
+  ],
+  "kill_conditions": [
+    "PJM secures emergency interregional transmission capacity",
+    "Major transformer replacement program accelerates",
+    "Data centers implement load-shedding protocols",
+    "500+ MW reserve margin restored in Eastern Interconnection",
+    "Narrative downgrade sequence is absent"
+  ],
+  "falsification_criterion": "No cascading multi-state blackout event with spatial specificity to Data Center Alley occurs between T_fracture and T_observable",
+  "confidence": {
+    "primary_prediction": "High (73%)",
+    "basis": "Validated against 2003 blackout, DOE 202(c) orders, 2024 data center event, transformer lead times"
+  }
+}

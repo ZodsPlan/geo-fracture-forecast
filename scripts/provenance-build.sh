@@ -1,53 +1,74 @@
 #!/bin/bash
-# Generates a proof.json for a given prediction.md file using OpenTimestamps.
+# Generates a proof.json for each given prediction.md file using OpenTimestamps.
 set -e
 shopt -s expand_aliases
+
 # ots-cli.js should be in PATH or alias it here
-# install ots-cli.js via npm: npm install -g ots-cli.js
+# install via: npm install -g ots-cli.js
 alias ots='ots-cli.js'
-FILE="$1"
+
 script_name="${BASH_SOURCE[0]##*/}"
-if [ -z "$FILE" ]; then
-  echo "Usage: ./$script_name path/to/prediction.md"
+
+# If no arguments, show usage
+if [ $# -eq 0 ]; then
+  echo "Usage: ./$script_name path/to/prediction1.md [path/to/prediction2.md ...]"
+  echo "       ./$script_name predictions/*.md"
   exit 1
 fi
 
-DIR=$(dirname "$FILE")
-BASENAME=$(basename "$FILE")
+# Process each file passed as argument
+for FILE in "$@"; do
+  # Skip if not a regular file
+  [ -f "$FILE" ] || continue
 
-echo "Processing: $FILE"
+  echo "Processing: $FILE"
 
-# 1. SHA256 (raw, machine-safe)
-SHA256=$(sha256sum "$FILE" | awk '{print $1}')
+  DIR=$(dirname "$FILE")
+  BASENAME=$(basename "$FILE")
+  BASENAME_NOEXT="${BASENAME%.*}"
+  SHA256=$(sha256sum "$FILE" | awk '{print $1}')
+  CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# 2. Create OTS if not exists
+  # Stamp the file with OpenTimestamps (if not already stamped)
+  ots stamp "$FILE" 2>/dev/null || true
 
-ots stamp "$FILE"
+  # ---- Derive a unique ID ----
+  # Use realpath to get absolute path
+  FULL_PATH="$(realpath "$FILE" 2>/dev/null || echo "$FILE")"
 
-# 3. Timestamp
-CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  # Get Git root (fallback to current directory if not in a repo)
+  if git rev-parse --show-toplevel >/dev/null 2>&1; then
+    GIT_ROOT="$(git rev-parse --show-toplevel)"
+  else
+    GIT_ROOT="$(pwd)"
+  fi
 
-# 4. Derive ID from path
+  # Normalize paths for cross-platform (Git Bash / WSL / Linux / macOS)
+  # If cygpath is available (Git Bash), use it; otherwise, use realpath
+  if command -v cygpath >/dev/null 2>&1; then
+    FULL_PATH="$(cygpath -u "$FULL_PATH")"
+    GIT_ROOT="$(cygpath -u "$GIT_ROOT")"
+  fi
 
-INPUT_FILE="$1"
+  # Remove repo root to get relative path
+  REL_PATH="${FULL_PATH#$GIT_ROOT/}"
+  # If REL_PATH equals FULL_PATH, fallback to basename
+  if [ "$REL_PATH" = "$FULL_PATH" ]; then
+    REL_PATH="$BASENAME"
+  fi
 
-# Full file path in Git Bash format
-FULL_PATH="$(realpath "$INPUT_FILE")"
+  # Convert path separators to dots and remove file extension
+  ID_PATH="${REL_PATH%/*}"
+  ID_PATH="${ID_PATH//\//.}"
+  if [ -n "$ID_PATH" ]; then
+    ID="${ID_PATH}.${BASENAME_NOEXT}"
+  else
+    ID="$BASENAME_NOEXT"
+  fi
+  # ---- End ID derivation ----
 
-# Git root in Git Bash format
-GIT_ROOT="$(git -C "$(dirname "$FULL_PATH")" rev-parse --show-toplevel)"
-
-# Normalize both paths
-FULL_PATH="$(cygpath -u "$FULL_PATH")"
-GIT_ROOT="$(cygpath -u "$GIT_ROOT")"
-
-# Remove repo root
-RELATIVE_PATH=`dirname "${FULL_PATH#$GIT_ROOT/}"`
-# Convert path separators to dots
-ID=$(echo "$RELATIVE_PATH" | tr '/' '.')
-
-# # 7. Write proof.json
-cat > "$DIR/$BASENAME.proof.json" <<EOF
+  # Write proof.json
+  cat > "$DIR/$BASENAME.proof.json" <<EOF
 {
   "id": "$ID",
   "file": "$BASENAME",
@@ -58,4 +79,7 @@ cat > "$DIR/$BASENAME.proof.json" <<EOF
 }
 EOF
 
-echo "Done."
+  echo "  -> Generated: $DIR/$BASENAME.proof.json (id: $ID)"
+done
+
+echo "All done."
